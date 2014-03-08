@@ -291,18 +291,18 @@ snooze_window_load(Window* window)
   layer_set_update_proc(layer, action_layer_update_callback);
   layer_add_child(window_layer, layer);
 
-  // TODO: Side-bar icons.
-
-  const GBitmap* icon_1 = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MENU_ICON_1);
-  const GBitmap* icon_2 = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MENU_ICON_1);
-
    action_bar_layer_set_icon(snooze_action_layer,
-   BUTTON_ID_SELECT, icon_1);
-   /*action_bar_layer_set_icon(snooze_action_layer,
-   BUTTON_ID_DOWN, icon_2);*/
+   BUTTON_ID_SELECT, gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MENU_ICON_1));
 }
 
-/* AppMessage API */
+/*
+ *
+ *
+ *      API MESSAGE HANDLERS
+ *
+ *
+ */
+
 void
 out_sent_handler(DictionaryIterator *sent, void *context)
 {
@@ -315,12 +315,6 @@ out_failed_handler(DictionaryIterator *failed, AppMessageResult reason,
 {
   // outgoing message failed
 }
-
-/*void
- in_received_handler(DictionaryIterator *received, void *context)
- {
- // incoming message received
- }*/
 
 void
 in_dropped_handler(AppMessageResult reason, void *context)
@@ -348,6 +342,14 @@ in_received_handler(DictionaryIterator *iter, void *context)
       vibes_short_pulse();
     }
 }
+
+/*
+ *
+ *
+ *      INITIALISERS AND DEINITIALISERS
+ *
+ *
+ */
 
 void
 init()
