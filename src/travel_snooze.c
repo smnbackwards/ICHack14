@@ -102,18 +102,18 @@ bookmark_menu_window_load(Window* window)
 
   bookmark_menu_bookmark_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Home", .subtitle = "Take me home!", .callback =
-              bookmark_menu_select_bookmark_callback, };
+          { .title = "Home", .subtitle = "Text Home", .callback =
+              bookmark_menu_select_bookmark_callback };
 
   bookmark_menu_bookmark_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Work", .subtitle = "Oh no!", .callback =
-              bookmark_menu_select_bookmark_callback, };
+          { .title = "Work", .subtitle = "Text Work", .callback =
+              bookmark_menu_select_bookmark_callback };
 
   bookmark_menu_bookmark_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "University", .subtitle = "Yay Pintos!", .callback =
-              bookmark_menu_select_bookmark_callback, };
+          { .title = "Uni", .subtitle = "Text Uni", .callback =
+              bookmark_menu_select_bookmark_callback };
 
   bookmark_menu_recent_items[0] = (SimpleMenuItem
         )
@@ -125,17 +125,19 @@ bookmark_menu_window_load(Window* window)
           { .title = "Bookmarks", .num_items = NUM_BOOKMARK_MENU_BOOKMARK_ELEMS,
               .items = bookmark_menu_bookmark_items, };
 
-  bookmark_menu_sections[1] = (SimpleMenuSection
-        )
-          { .title = "Recent Places!!", .num_items =
+  bookmark_menu_sections[1] =
+      (SimpleMenuSection
+            )
+              { .title = "Recent Places!!", .num_items =
               NUM_BOOKMARK_MENU_RECENT_ELEMS, .items =
-              bookmark_menu_recent_items, };
+                  bookmark_menu_recent_items, };
 
   Layer* window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
 
   bookmark_menu_layer = simple_menu_layer_create(bounds, window,
       bookmark_menu_sections, NUM_BOOKMARK_MENU_SECTIONS, NULL);
+
   layer_add_child(window_layer,
       simple_menu_layer_get_layer(bookmark_menu_layer));
 }
@@ -226,8 +228,7 @@ action_layer_bookmark_click_handler(ClickRecognizerRef recognizer,
 }
 
 static void
-action_layer_cancel_click_handler(ClickRecognizerRef recognizer,
-    void* context)
+action_layer_cancel_click_handler(ClickRecognizerRef recognizer, void* context)
 {
   Window* window = (Window *) context;
 }
@@ -279,10 +280,10 @@ snooze_window_load(Window* window)
 
   // TODO: Side-bar icons.
   /*
-  action_bar_layer_set_icon(snooze_action_layer,
-      BUTTON_ID_UP, &my_icon_previous);
-  action_bar_layer_set_icon(snooze_action_layer,
-      BUTTON_ID_DOWN, &my_icon_next);*/
+   action_bar_layer_set_icon(snooze_action_layer,
+   BUTTON_ID_UP, &my_icon_previous);
+   action_bar_layer_set_icon(snooze_action_layer,
+   BUTTON_ID_DOWN, &my_icon_next);*/
 }
 
 /* AppMessage API */
@@ -300,10 +301,10 @@ out_failed_handler(DictionaryIterator *failed, AppMessageResult reason,
 }
 
 /*void
-in_received_handler(DictionaryIterator *received, void *context)
-{
-  // incoming message received
-}*/
+ in_received_handler(DictionaryIterator *received, void *context)
+ {
+ // incoming message received
+ }*/
 
 void
 in_dropped_handler(AppMessageResult reason, void *context)
@@ -350,9 +351,9 @@ init()
 
   /* TODO: Do the unload too. */
   snooze_window = window_create();
-  window_set_window_handlers(snooze_window, (WindowHandlers) {
-   .load = snooze_window_load
-  });
+  window_set_window_handlers(snooze_window, (WindowHandlers
+        )
+          { .load = snooze_window_load });
 
   window_stack_push(bookmark_menu_window, true);
 
@@ -377,8 +378,8 @@ de_init()
 int
 main(void)
 {
-  if(snooze_window == NULL)
-  init();
+  if (snooze_window == NULL)
+    init();
   app_event_loop();
   de_init();
 }
