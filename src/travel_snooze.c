@@ -257,21 +257,21 @@ action_layer_update_callback(Layer *layer, GContext* ctx)
 
   GRect bounds = layer_get_frame(layer);
 
-  graphics_draw_text(ctx, selected_location,
+  graphics_draw_text(ctx, "180 Queens Gate, SW7 2BB, London UK",
       fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-      GRect(5, 5, bounds.size.w - 20, 25), GTextOverflowModeWordWrap,
+      GRect(5, 5, bounds.size.w - 22, 72), GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
       
         graphics_draw_text(ctx, "100 km",
       fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK),
-      GRect(5, 50, bounds.size.w - 20, 50), GTextOverflowModeWordWrap,
+      GRect(5, 75, bounds.size.w - 22, 50), GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
 
   graphics_draw_text(ctx, "1:20",
       fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK),
-      GRect(5, 110, bounds.size.w - 20, 100), GTextOverflowModeWordWrap,
+      GRect(5, 110, bounds.size.w - 22, 100), GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
 }
