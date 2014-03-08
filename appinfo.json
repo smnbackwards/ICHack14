@@ -1,5 +1,5 @@
 {
-  "uuid": "4f969153-f36e-470a-ac75-60f0c090ddbb",
+  "uuid": "09f1203a-3f08-498d-93a4-4003cba6ce05",
   "shortName": "Travel Snooze",
   "longName": "Travel Snooze",
   "companyName": "Triceratops Technologies",
@@ -10,6 +10,6 @@
   },
   "appKeys": {},
   "resources": {
-    "media": []
+    "media": [{"type": "png", "name": "IMAGE_MENU_ICON_1", "file": "images/cross_icon.png"}]
   }
 }

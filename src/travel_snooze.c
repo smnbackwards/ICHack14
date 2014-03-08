@@ -279,11 +279,14 @@ snooze_window_load(Window* window)
   layer_add_child(window_layer, layer);
 
   // TODO: Side-bar icons.
-  /*
+
+  const GBitmap* icon_1 = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MENU_ICON_1);
+  const GBitmap* icon_2 = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MENU_ICON_1);
+
    action_bar_layer_set_icon(snooze_action_layer,
-   BUTTON_ID_UP, &my_icon_previous);
+   BUTTON_ID_UP, icon_1);
    action_bar_layer_set_icon(snooze_action_layer,
-   BUTTON_ID_DOWN, &my_icon_next);*/
+   BUTTON_ID_DOWN, icon_2);
 }
 
 /* AppMessage API */
