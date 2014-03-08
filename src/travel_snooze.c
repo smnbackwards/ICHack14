@@ -23,6 +23,9 @@
 /* Number of items in recent places section of recent places menu. */
 #define NUM_RECENT_MENU_RECENT_ELEMS 5
 
+static char *selected_location = "Home";
+
+
 /*
  *
  *
@@ -74,6 +77,9 @@ static ActionBarLayer* snooze_action_layer;
 static void
 bookmark_menu_select_bookmark_callback(int index, void* context)
 {
+  const char * a = bookmark_menu_bookmark_items[index].title;
+  strncpy(selected_location, a, strlen(a));
+
   window_stack_push(snooze_window, true);
 
   DictionaryIterator *iter;
@@ -242,6 +248,7 @@ action_layer_click_config_provider(void *context)
       (ClickHandler) action_layer_cancel_click_handler);
 }
 
+
 static void
 action_layer_update_callback(Layer *layer, GContext* ctx)
 {
@@ -249,16 +256,22 @@ action_layer_update_callback(Layer *layer, GContext* ctx)
 
   GRect bounds = layer_get_frame(layer);
 
-  graphics_draw_text(ctx, "Text here.",
-      fonts_get_system_font(FONT_KEY_FONT_FALLBACK),
-      GRect(5, 5, bounds.size.w - 10, 100), GTextOverflowModeWordWrap,
-      GTextAlignmentLeft,
+  graphics_draw_text(ctx, selected_location,
+      fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
+      GRect(5, 5, bounds.size.w - 20, 25), GTextOverflowModeWordWrap,
+      GTextAlignmentCenter,
+      NULL);
+      
+        graphics_draw_text(ctx, "100 km",
+      fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK),
+      GRect(5, 50, bounds.size.w - 20, 50), GTextOverflowModeWordWrap,
+      GTextAlignmentCenter,
       NULL);
 
-  graphics_draw_text(ctx, "And text here as well.",
-      fonts_get_system_font(FONT_KEY_FONT_FALLBACK),
-      GRect(90, 100, bounds.size.w - 95, 60), GTextOverflowModeWordWrap,
-      GTextAlignmentRight,
+  graphics_draw_text(ctx, "1:20",
+      fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK),
+      GRect(5, 110, bounds.size.w - 20, 100), GTextOverflowModeWordWrap,
+      GTextAlignmentCenter,
       NULL);
 }
 
