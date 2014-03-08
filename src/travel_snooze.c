@@ -1,5 +1,13 @@
 #include "pebble.h"
 
+/*
+ *
+ *
+ *      MACROS
+ *
+ *
+ */
+
 /* Number of sections in bookmark menu. */
 #define NUM_BOOKMARK_MENU_SECTIONS 2
 
@@ -15,80 +23,19 @@
 /* Number of items in recent places section of recent places menu. */
 #define NUM_RECENT_MENU_RECENT_ELEMS 5
 
-/* Action Layer code. */
-static Window* snooze_window;
-static ActionBarLayer* snooze_action_layer;
+/*
+ *
+ *
+ *      STATIC VARIABLE DECLARATIONS
+ *
+ *
+ */
 
-void
-action_layer_bookmark_click_handler(ClickRecognizerRef recognizer, void* context)
-{
-  Window* window = (Window *) context;
-}
-
-void
-action_layer_cancel_click_handler(ClickRecognizerRef recognizer, void* context)
-{
-  Window* window = (Window *) context;
-}
-
-void
-click_config_provider(void *context)
-{
-  window_single_click_subscribe(BUTTON_ID_DOWN,
-      (ClickHandler) action_layer_bookmark_click_handler);
-  window_single_click_subscribe(BUTTON_ID_UP,
-      (ClickHandler) action_layer_cancel_click_handler);
-}
-
-static void update_layer_callback(Layer *layer, GContext* ctx) {
-  graphics_context_set_text_color(ctx, GColorBlack);
-
-  GRect bounds = layer_get_frame(layer);
-
-  graphics_draw_text(ctx,
-      "Text here.",
-      fonts_get_system_font(FONT_KEY_FONT_FALLBACK),
-      GRect(5, 5, bounds.size.w-10, 100),
-      GTextOverflowModeWordWrap,
-      GTextAlignmentLeft,
-      NULL);
-
-  graphics_draw_text(ctx,
-      "And text here as well.",
-      fonts_get_system_font(FONT_KEY_FONT_FALLBACK),
-      GRect(90, 100, bounds.size.w-95, 60),
-      GTextOverflowModeWordWrap,
-      GTextAlignmentRight,
-      NULL);
-}
-
-
-void
-snooze_window_load(Window *window)
-{
-// Initialize the action bar:
-  snooze_action_layer = action_bar_layer_create();
-// Associate the action bar with the window:
-  action_bar_layer_add_to_window(snooze_action_layer, window);
-// Set the click config provider:
-  action_bar_layer_set_click_config_provider(snooze_action_layer,
-      click_config_provider);
-
-  Layer *window_layer = window_get_root_layer(window);
-  Layer* layer = (Layer *) snooze_action_layer;
-   GRect bounds = layer_get_frame(window_layer);
-   layer = layer_create(bounds);
-   layer_set_update_proc(layer, update_layer_callback);
-   layer_add_child(window_layer, layer);
-
-// Set the icons:
-// The loading the icons is omitted for brevity... See HeapBitmap.
-  /*action_bar_layer_set_icon(snooze_action_layer, BUTTON_ID_UP,
-      &my_icon_previous);
-  action_bar_layer_set_icon(snooze_action_layer, BUTTON_ID_DOWN, &my_icon_next);*/
-}
-
-/* Bookmark menu items. */
+/*
+ *
+ *      BOOKMARK MENU DECLARATIONS
+ *
+ */
 static Window* bookmark_menu_window;
 
 static SimpleMenuLayer* bookmark_menu_layer;
@@ -97,7 +44,11 @@ static SimpleMenuSection bookmark_menu_sections[NUM_BOOKMARK_MENU_SECTIONS];
 static SimpleMenuItem bookmark_menu_bookmark_items[NUM_BOOKMARK_MENU_BOOKMARK_ELEMS];
 static SimpleMenuItem bookmark_menu_recent_items[NUM_BOOKMARK_MENU_RECENT_ELEMS];
 
-/* Recent places menu items. */
+/*
+ *
+ *      RECENT PLACES MENU DECLARATIONS
+ *
+ */
 static Window* recent_menu_window;
 
 static SimpleMenuLayer* recent_menu_layer;
@@ -105,7 +56,21 @@ static SimpleMenuSection recent_menu_sections[NUM_RECENT_MENU_SECTIONS];
 
 static SimpleMenuItem recent_menu_items[NUM_RECENT_MENU_RECENT_ELEMS];
 
-/* Bookmark menu init functions. */
+/*
+ *
+ *      LOCATION WINDOW DECLARATIONS
+ *
+ */
+static Window* snooze_window;
+static ActionBarLayer* snooze_action_layer;
+
+/*
+ *
+ *
+ *      BOOKMARK MENU FUNCTIONS
+ *
+ *
+ */
 static void
 bookmark_menu_select_bookmark_callback(int index, void* context)
 {
@@ -181,7 +146,14 @@ bookmark_menu_window_unload(Window* window)
   simple_menu_layer_destroy(bookmark_menu_layer);
 }
 
-/* Recent places menu init functions. */
+/*
+ *
+ *
+ *      RECENT PLACES MENU FUNCTIONS
+ *
+ *
+ */
+
 static void
 recent_menu_select_callback(int index, void* context)
 {
@@ -236,6 +208,81 @@ static void
 recent_menu_window_unload(Window* window)
 {
   simple_menu_layer_destroy(recent_menu_layer);
+}
+
+/*
+ *
+ *
+ *      LOCATION WINDOW FUNCTIONS
+ *
+ *
+ */
+
+static void
+action_layer_bookmark_click_handler(ClickRecognizerRef recognizer,
+    void* context)
+{
+  Window* window = (Window *) context;
+}
+
+static void
+action_layer_cancel_click_handler(ClickRecognizerRef recognizer,
+    void* context)
+{
+  Window* window = (Window *) context;
+}
+
+static void
+action_layer_click_config_provider(void *context)
+{
+  window_single_click_subscribe(BUTTON_ID_DOWN,
+      (ClickHandler) action_layer_bookmark_click_handler);
+
+  window_single_click_subscribe(BUTTON_ID_UP,
+      (ClickHandler) action_layer_cancel_click_handler);
+}
+
+static void
+action_layer_update_callback(Layer *layer, GContext* ctx)
+{
+  graphics_context_set_text_color(ctx, GColorBlack);
+
+  GRect bounds = layer_get_frame(layer);
+
+  graphics_draw_text(ctx, "Text here.",
+      fonts_get_system_font(FONT_KEY_FONT_FALLBACK),
+      GRect(5, 5, bounds.size.w - 10, 100), GTextOverflowModeWordWrap,
+      GTextAlignmentLeft,
+      NULL);
+
+  graphics_draw_text(ctx, "And text here as well.",
+      fonts_get_system_font(FONT_KEY_FONT_FALLBACK),
+      GRect(90, 100, bounds.size.w - 95, 60), GTextOverflowModeWordWrap,
+      GTextAlignmentRight,
+      NULL);
+}
+
+static void
+snooze_window_load(Window* window)
+{
+  snooze_action_layer = action_bar_layer_create();
+  action_bar_layer_add_to_window(snooze_action_layer, window);
+
+  action_bar_layer_set_click_config_provider(snooze_action_layer,
+      action_layer_click_config_provider);
+
+  Layer* window_layer = window_get_root_layer(window);
+  Layer* layer = (Layer *) snooze_action_layer;
+  layer = layer_create(layer_get_frame(window_layer));
+  layer_set_update_proc(layer, action_layer_update_callback);
+  layer_add_child(window_layer, layer);
+
+  // TODO: Side-bar icons.
+  /*
+  action_bar_layer_set_icon(snooze_action_layer,
+      BUTTON_ID_UP, &my_icon_previous);
+  action_bar_layer_set_icon(snooze_action_layer,
+      BUTTON_ID_DOWN, &my_icon_next);*/
 }
 
 /* AppMessage API */
