@@ -297,9 +297,9 @@ snooze_window_load(Window* window)
   const GBitmap* icon_2 = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MENU_ICON_1);
 
    action_bar_layer_set_icon(snooze_action_layer,
-   BUTTON_ID_UP, icon_1);
-   action_bar_layer_set_icon(snooze_action_layer,
-   BUTTON_ID_DOWN, icon_2);
+   BUTTON_ID_SELECT, icon_1);
+   /*action_bar_layer_set_icon(snooze_action_layer,
+   BUTTON_ID_DOWN, icon_2);*/
 }
 
 /* AppMessage API */
