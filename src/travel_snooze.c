@@ -43,6 +43,8 @@
  *      BOOKMARK MENU DECLARATIONS
  *
  */
+ 
+ static bool awake = false;
 static Window* bookmark_menu_window;
 
 static SimpleMenuLayer* bookmark_menu_layer;
@@ -86,6 +88,8 @@ char dist_text [8] = "";
 
 static void handle_tick(struct tm* tick_time, TimeUnits units_changed)
 {
+  if(awake) vibes_long_pulse();
+
   if(reset)
     {
       start_time.tm_hour = tick_time->tm_hour;
@@ -264,6 +268,7 @@ action_layer_bookmark_cancel_handler(ClickRecognizerRef recognizer,
 {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Cancel");
 
+  awake = false;
   window_stack_pop(true);
 }
 
@@ -384,18 +389,19 @@ in_received_handler(DictionaryIterator *iter, void *context)
     if(dist_tuple)
     {
       int dist = (int)dist_tuple->value->int32;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Dist:%d", dist);
-    
-    
-    snprintf(dist_text, 8, (dist <1)?"<1 km" :"%d km", dist);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, dist_text);
-    
-    text_layer_set_text(distance_text_layer, dist_text);
-    layer_mark_dirty(text_layer_get_layer(distance_text_layer));
-    if(dist == -2)
-    {  
-      vibes_short_pulse();
-    }
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Dist:%d", dist);
+      
+      
+      snprintf(dist_text, 8, (dist <1)?"<1 km" :"%d km", dist);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, dist_text);
+      
+      //text_layer_set_text(distance_text_layer, dist_text);
+      //layer_mark_dirty(text_layer_get_layer(distance_text_layer));
+      if(dist == -2)
+      {  
+        awake = true;
+      }
+      
     
     }
 }
