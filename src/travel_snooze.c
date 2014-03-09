@@ -129,8 +129,6 @@ bookmark_menu_select_bookmark_callback(int index, void* context)
 static void
 bookmark_menu_select_recent_callback(int index, void* context)
 {
-  bookmark_menu_recent_items[index].subtitle = "You will go to recent places.";
-  layer_mark_dirty(simple_menu_layer_get_layer(bookmark_menu_layer));
   window_stack_push(recent_menu_window, true);
 }
 
@@ -141,22 +139,22 @@ bookmark_menu_window_load(Window* window)
 
   bookmark_menu_bookmark_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Home", .subtitle = "Text Home", .callback =
+          { .title = "Home", .subtitle = "SW6 4YF", .callback =
               bookmark_menu_select_bookmark_callback };
 
   bookmark_menu_bookmark_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Work", .subtitle = "Text Work", .callback =
+          { .title = "Work", .subtitle = "W6 9NJ", .callback =
               bookmark_menu_select_bookmark_callback };
 
   bookmark_menu_bookmark_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Uni", .subtitle = "Text Uni", .callback =
+          { .title = "University", .subtitle = "SW7 2AZ", .callback =
               bookmark_menu_select_bookmark_callback };
 
   bookmark_menu_recent_items[0] = (SimpleMenuItem
         )
-          { .title = "Recent Places", .subtitle = "I was drunk!", .callback =
+          { .title = "Recent Places", .subtitle = "Recently used locations", .callback =
               bookmark_menu_select_recent_callback, };
 
   bookmark_menu_sections[0] = (SimpleMenuSection
@@ -167,7 +165,7 @@ bookmark_menu_window_load(Window* window)
   bookmark_menu_sections[1] =
       (SimpleMenuSection
             )
-              { .title = "Recent Places!!", .num_items =
+              { .title = "Recent Places", .num_items =
               NUM_BOOKMARK_MENU_RECENT_ELEMS, .items =
                   bookmark_menu_recent_items, };
 
@@ -198,8 +196,6 @@ bookmark_menu_window_unload(Window* window)
 static void
 recent_menu_select_callback(int index, void* context)
 {
-  recent_menu_items[index].subtitle = "Remember this place?";
-  layer_mark_dirty(simple_menu_layer_get_layer(recent_menu_layer));
 }
 
 static void
@@ -209,27 +205,27 @@ recent_menu_window_load(Window* window)
 
   recent_menu_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Recent 1", .subtitle = "You were here before!",
+          { .title = "Recent 1", .subtitle = "SW14 6TY",
               .callback = recent_menu_select_callback, };
 
   recent_menu_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Recent 2", .subtitle = "You were here before.",
+          { .title = "Recent 2", .subtitle = "W4 6NU",
               .callback = recent_menu_select_callback, };
 
   recent_menu_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Recent 3", .subtitle = "You were here before.",
+          { .title = "Recent 3", .subtitle = "W6 5HP",
               .callback = recent_menu_select_callback, };
 
   recent_menu_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Recent 4", .subtitle = "You were here before.",
+          { .title = "Recent 4", .subtitle = "BT34 1QN",
               .callback = recent_menu_select_callback, };
 
   recent_menu_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Recent 5", .subtitle = "You were here before.",
+          { .title = "Recent 5", .subtitle = "BT35 6TJ",
               .callback = recent_menu_select_callback, };
 
   recent_menu_sections[0] = (SimpleMenuSection
