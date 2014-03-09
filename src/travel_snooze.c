@@ -73,7 +73,8 @@ static ActionBarLayer* snooze_action_layer;
 static TextLayer* address_text_layer;
 static TextLayer* distance_text_layer;
 static TextLayer* timer_text_layer;
-static bool measuring = false;
+static bool reset = false;
+static struct tm start_time;
 
 /*
  *
@@ -83,16 +84,24 @@ static bool measuring = false;
 
 static void handle_tick(struct tm* tick_time, TimeUnits units_changed)
 {
-  if(measuring)
+  if(reset)
     {
-      text_layer_set_text(timer_text_layer, clock_is_24h_style() ? "Mode:\n24" : "Mode:\n12");
-      layer_mark_dirty(text_layer_get_layer(timer_text_layer));
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "Tick!");
+      start_time.tm_hour = tick_time->tm_hour;
+      start_time.tm_min = tick_time->tm_min;
+      start_time.tm_sec = tick_time->tm_sec;
+      reset = !reset;
     }
-  else
-    {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "Not measured!");
-    }
+
+  static char* time;
+  if (time != NULL)
+    free(time);
+  time = malloc(20);
+  tick_time->tm_hour -= start_time.tm_hour;
+  tick_time->tm_min -= start_time.tm_min;
+  tick_time->tm_sec -= start_time.tm_sec;
+  strftime(time, 20, "%H:%M:%S", tick_time);
+  text_layer_set_text(timer_text_layer, time);
+  layer_mark_dirty(text_layer_get_layer(timer_text_layer));
 }
 
 /*
@@ -274,21 +283,18 @@ snooze_window_load(Window* window)
   text_layer_set_text_alignment(address_text_layer, GTextAlignmentCenter);
   text_layer_set_font(address_text_layer,
       fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-  text_layer_set_text(address_text_layer, "Location");
   layer_add_child(window_layer, text_layer_get_layer(address_text_layer));
 
   distance_text_layer = text_layer_create(GRect(5, 50, bounds.size.w - 20, 50));
   text_layer_set_text_alignment(distance_text_layer, GTextAlignmentCenter);
   text_layer_set_font(distance_text_layer,
       fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
-  text_layer_set_text(distance_text_layer, "Distance");
   layer_add_child(window_layer, text_layer_get_layer(distance_text_layer));
 
   timer_text_layer = text_layer_create(GRect(5, 110, bounds.size.w - 20, 100));
   text_layer_set_text_alignment(timer_text_layer, GTextAlignmentCenter);
   text_layer_set_font(timer_text_layer,
-      fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-  text_layer_set_text(timer_text_layer, "Timer");
+      fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   layer_add_child(window_layer, text_layer_get_layer(timer_text_layer));
 
   snooze_action_layer = action_bar_layer_create();
@@ -302,15 +308,19 @@ snooze_window_load(Window* window)
 
    layer_add_child(window_layer, action_bar_layer_get_layer(snooze_action_layer));
 
-   measuring = true;
+   reset = true;
+   tick_timer_service_subscribe(SECOND_UNIT, handle_tick);
 }
 
 static void
 snooze_window_unload(Window* window)
 {
-  measuring = false;
   action_bar_layer_destroy(snooze_action_layer);
   text_layer_destroy(address_text_layer);
+  text_layer_destroy(timer_text_layer);
+  text_layer_destroy(distance_text_layer);
+
+  tick_timer_service_unsubscribe();
 }
 
 /*
@@ -348,20 +358,25 @@ enum
 static void
 in_received_handler(DictionaryIterator *iter, void *context)
 {
-  vibes_short_pulse();
+  //vibes_short_pulse();
 
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Received");
   // Check for fields you expect to receive
   Tuple *name_tuple = dict_find(iter, AKEY_NAME);
   Tuple *add_tuple = dict_find(iter, AKEY_ADDRESS);
+
   if (name_tuple)
     {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "Name:%s", name_tuple->value->cstring);
+      const char* name = name_tuple->value->cstring;
+      bookmark_menu_bookmark_items[0] = (SimpleMenuItem)
+        { .title = name, .subtitle = "Hullow...", .callback =
+            bookmark_menu_select_bookmark_callback };
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Name:%s", name);
     }
-
   if (add_tuple)
     {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "Add:%s", add_tuple->value->cstring);
+      const char* add = add_tuple->value->cstring;
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Add:%s", add);
     }
 }
 
@@ -401,8 +416,6 @@ init()
   const uint32_t outbound_size = 64;
   app_message_open(inbound_size, outbound_size);
 
-  tick_timer_service_subscribe(SECOND_UNIT, handle_tick);
-  
   app_message_register_inbox_received(in_received_handler);
   app_message_register_inbox_dropped(in_dropped_handler);
   app_message_register_outbox_sent(out_sent_handler);
@@ -415,8 +428,6 @@ de_init()
   window_destroy(snooze_window);
   window_destroy(recent_menu_window);
   window_destroy(bookmark_menu_window);
-
-  tick_timer_service_unsubscribe();
 }
 
 int
