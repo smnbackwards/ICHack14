@@ -75,8 +75,8 @@ static TextLayer* distance_text_layer;
 static TextLayer* timer_text_layer;
 static bool reset = false;
 static struct tm start_time;
-static char loc_text [128] = "...";
-char dist_text [8] = " {.}";
+static char loc_text [64] = "Home";
+char dist_text [8] = "";
 
 /*
  *
@@ -264,7 +264,7 @@ action_layer_bookmark_cancel_handler(ClickRecognizerRef recognizer,
 {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Cancel");
 
-  snooze_window_unload(snooze_window);
+  window_stack_pop(true);
 }
 
 static void
@@ -387,7 +387,7 @@ in_received_handler(DictionaryIterator *iter, void *context)
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Dist:%d", dist);
     
     
-    snprintf(dist_text, 8, "%d km", dist);
+    snprintf(dist_text, 8, (dist <1)?"<1 km" :"%d km", dist);
     APP_LOG(APP_LOG_LEVEL_DEBUG, dist_text);
     
     text_layer_set_text(distance_text_layer, dist_text);
