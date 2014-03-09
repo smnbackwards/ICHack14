@@ -30,6 +30,7 @@
 /* Number of items in recent places section of recent places menu. */
 #define NUM_RECENT_MENU_RECENT_ELEMS 5
 
+#define MAX_CHARS 10
 /*
  *
  *
@@ -73,14 +74,78 @@ static ActionBarLayer* snooze_action_layer;
 static TextLayer* address_text_layer;
 static TextLayer* distance_text_layer;
 static TextLayer* timer_text_layer;
+
 static bool reset = false;
 static struct tm start_time;
+static char dist_text[8];
+char names[NUM_BOOKMARK_MENU_BOOKMARK_ELEMS + NUM_RECENT_MENU_RECENT_ELEMS][MAX_CHARS];
+
+AppSync sync;
+uint8_t sync_buffer[32];
 
 /*
  *
  *      TICK HANDLER
  *
  */
+
+static void
+bookmark_menu_select_bookmark_callback(int index, void* context);
+
+void sync_tuple_changed_callback(const uint32_t key,
+        const Tuple* new_tuple, const Tuple* old_tuple, void* context)
+{
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "%d", (int) key);
+  if(key == 0)
+    {
+      const char* distance = new_tuple->value->cstring;
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Received distance:%s", distance);
+      if(distance_text_layer != NULL)
+        {
+          text_layer_set_text(distance_text_layer, distance);
+          layer_mark_dirty(text_layer_get_layer(distance_text_layer));
+        }
+    }
+  else if(key == 1)
+    {
+      const char* location = new_tuple->value->cstring;
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Location:%s", location);
+      if(address_text_layer != NULL)
+        {
+          text_layer_set_text(address_text_layer, location);
+          layer_mark_dirty(text_layer_get_layer(address_text_layer));
+        }
+    }
+  else if(key == 2)
+    {
+      const char* book1 = new_tuple->value->cstring;
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Bookmark 1:%s", book1);
+
+      bookmark_menu_bookmark_items[0] = (SimpleMenuItem
+            )
+              { .title = book1, .subtitle = bookmark_menu_bookmark_items[0].subtitle, .callback =
+                  bookmark_menu_select_bookmark_callback };
+
+      layer_mark_dirty(simple_menu_layer_get_layer(bookmark_menu_layer));
+    }
+  else if(key == 3)
+    {
+      const char* book1 = new_tuple->value->cstring;
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Received Bookmark 1 sub:%s", book1);
+
+      bookmark_menu_bookmark_items[0] = (SimpleMenuItem
+            )
+              { .title = bookmark_menu_bookmark_items[0].title, .subtitle = book1, .callback =
+                  bookmark_menu_select_bookmark_callback };
+
+      layer_mark_dirty(simple_menu_layer_get_layer(bookmark_menu_layer));
+    }
+}
+
+void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context)
+{
+
+}
 
 static void handle_tick(struct tm* tick_time, TimeUnits units_changed)
 {
@@ -122,6 +187,7 @@ bookmark_menu_select_bookmark_callback(int index, void* context)
   app_message_outbox_send();
 
   window_stack_push(snooze_window, true);
+  reset = true;
 }
 
 static void
@@ -173,6 +239,10 @@ bookmark_menu_window_load(Window* window)
   bookmark_menu_layer = simple_menu_layer_create(bounds, window,
       bookmark_menu_sections, NUM_BOOKMARK_MENU_SECTIONS, NULL);
 
+  Tuplet new[] = {};
+  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), new, 0,
+        sync_tuple_changed_callback, sync_error_callback, NULL);
+
   layer_add_child(window_layer,
       simple_menu_layer_get_layer(bookmark_menu_layer));
 }
@@ -180,6 +250,7 @@ bookmark_menu_window_load(Window* window)
 static void
 bookmark_menu_window_unload(Window* window)
 {
+  app_sync_deinit(&sync);
   simple_menu_layer_destroy(bookmark_menu_layer);
 }
 
@@ -310,7 +381,6 @@ snooze_window_load(Window* window)
 
    layer_add_child(window_layer, action_bar_layer_get_layer(snooze_action_layer));
 
-   reset = true;
    tick_timer_service_subscribe(SECOND_UNIT, handle_tick);
 }
 
@@ -363,28 +433,41 @@ static void
 in_received_handler(DictionaryIterator *iter, void *context)
 {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Received");
-  // Check for fields you expect to receive
+
   Tuple *name_tuple = dict_find(iter, AKEY_NAME);
   Tuple *add_tuple = dict_find(iter, AKEY_ADDRESS);
   Tuple *dist_tuple = dict_find(iter, AKEY_NUMBER);
-  if (name_tuple)
+
+  if (name_tuple != NULL)
     {
       const char* name = name_tuple->value->cstring;
-      bookmark_menu_bookmark_items[0] = (SimpleMenuItem)
-        { .title = name, .subtitle = "Hullow...", .callback =
-            bookmark_menu_select_bookmark_callback };
+      bookmark_menu_bookmark_items[0] = (SimpleMenuItem
+            )
+              { .title = "SW6 4YF", .subtitle = "Home", .callback =
+                  bookmark_menu_select_bookmark_callback };
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Name:%s", name);
     }
-  if (add_tuple)
+
+  if (add_tuple != NULL)
     {
       const char* add = add_tuple->value->cstring;
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Add:%s", add);
     }
-    
-    if(dist_tuple)
+
+  if (dist_tuple != NULL)
     {
-      int dist = (int)dist_tuple->value->int32;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Dist:%d", dist);
+      int dist = (int) dist_tuple->value->int32;
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Dist:%d", dist);
+
+      snprintf(dist_text, 8, (dist < 1) ? "<1 km" : "%d km", dist);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, dist_text);
+
+      text_layer_set_text(distance_text_layer, dist_text);
+      layer_mark_dirty(text_layer_get_layer(distance_text_layer));
+      if (dist == -2)
+        {
+          vibes_short_pulse();
+        }
     }
 }
 
@@ -420,10 +503,11 @@ init()
   window_stack_push(bookmark_menu_window, true);
 
   app_message_open(64,64);
+  /*
   app_message_register_inbox_received(in_received_handler);
   app_message_register_inbox_dropped(in_dropped_handler);
   app_message_register_outbox_sent(out_sent_handler);
-  app_message_register_outbox_failed(out_failed_handler);
+  app_message_register_outbox_failed(out_failed_handler);*/
 }
 
 void
