@@ -340,22 +340,28 @@ in_dropped_handler(AppMessageResult reason, void *context)
   // incoming message dropped
 }
 
+enum
+{
+  AKEY_NUMBER, AKEY_NAME, AKEY_ADDRESS,
+};
+
 static void
 in_received_handler(DictionaryIterator *iter, void *context)
 {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Received!");
+  vibes_short_pulse();
+
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Received");
   // Check for fields you expect to receive
-  for(int i = 0; i < 16; ++i)
+  Tuple *name_tuple = dict_find(iter, AKEY_NAME);
+  Tuple *add_tuple = dict_find(iter, AKEY_ADDRESS);
+  if (name_tuple)
     {
-      Tuple *text_tuple = dict_find(iter, i);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Name:%s", name_tuple->value->cstring);
+    }
 
-      if(text_tuple != NULL)
-        {
-          APP_LOG(APP_LOG_LEVEL_DEBUG, "Text: %s", text_tuple->value->cstring);
-
-          if(i % 2 == 0)
-             strncpy((char *) bookmark_menu_bookmark_items[i].title, text_tuple->value->cstring, strlen(text_tuple->value->cstring));
-        }
+  if (add_tuple)
+    {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Add:%s", add_tuple->value->cstring);
     }
 }
 
@@ -391,16 +397,16 @@ init()
 
   window_stack_push(bookmark_menu_window, true);
 
-  app_message_register_inbox_received(in_received_handler);
-  app_message_register_inbox_dropped(in_dropped_handler);
-  app_message_register_outbox_sent(out_sent_handler);
-  app_message_register_outbox_failed(out_failed_handler);
-
   const uint32_t inbound_size = 64;
   const uint32_t outbound_size = 64;
   app_message_open(inbound_size, outbound_size);
 
   tick_timer_service_subscribe(SECOND_UNIT, handle_tick);
+  
+  app_message_register_inbox_received(in_received_handler);
+  app_message_register_inbox_dropped(in_dropped_handler);
+  app_message_register_outbox_sent(out_sent_handler);
+  app_message_register_outbox_failed(out_failed_handler);
 }
 
 void
