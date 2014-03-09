@@ -138,6 +138,7 @@ void sync_tuple_changed_callback(const uint32_t key,
               { .title = bookmark_menu_bookmark_items[0].title, .subtitle = book1, .callback =
                   bookmark_menu_select_bookmark_callback };
 
+
       layer_mark_dirty(simple_menu_layer_get_layer(bookmark_menu_layer));
     }
 }
@@ -199,21 +200,29 @@ bookmark_menu_select_recent_callback(int index, void* context)
 static void
 bookmark_menu_window_load(Window* window)
 {
+  Tuplet initial_values[] = {
+      TupletCString(2, "Home"),
+      TupletCString(3, "SW6 4YF"),
+      TupletCString(4, "Work"),
+      TupletCString(5, "W6 9NJ"),
+      TupletCString(6, "University"),
+      TupletCString(7, "SW7 2AZ")
+  };
   int num_items = 0;
 
   bookmark_menu_bookmark_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Home", .subtitle = "SW6 4YF", .callback =
+          { .title = initial_values[0].cstring.data, .subtitle = initial_values[1].cstring.data, .callback =
               bookmark_menu_select_bookmark_callback };
 
   bookmark_menu_bookmark_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "Work", .subtitle = "W6 9NJ", .callback =
+          { .title = initial_values[2].cstring.data, .subtitle = initial_values[3].cstring.data, .callback =
               bookmark_menu_select_bookmark_callback };
 
   bookmark_menu_bookmark_items[num_items++] = (SimpleMenuItem
         )
-          { .title = "University", .subtitle = "SW7 2AZ", .callback =
+          { .title = initial_values[4].cstring.data, .subtitle = initial_values[5].cstring.data, .callback =
               bookmark_menu_select_bookmark_callback };
 
   bookmark_menu_recent_items[0] = (SimpleMenuItem
@@ -239,8 +248,7 @@ bookmark_menu_window_load(Window* window)
   bookmark_menu_layer = simple_menu_layer_create(bounds, window,
       bookmark_menu_sections, NUM_BOOKMARK_MENU_SECTIONS, NULL);
 
-  Tuplet new[] = {};
-  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), new, 0,
+  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
         sync_tuple_changed_callback, sync_error_callback, NULL);
 
   layer_add_child(window_layer,
