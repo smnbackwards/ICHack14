@@ -284,7 +284,8 @@ snooze_window_load(Window* window)
   distance_text_layer = text_layer_create(GRect(5, 50, bounds.size.w - 20, 50));
   text_layer_set_text_alignment(distance_text_layer, GTextAlignmentCenter);
   text_layer_set_font(distance_text_layer,
-      fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
+      fonts_get_system_font(FONT_KEY_GOTHIC_28));
+  text_layer_set_text(distance_text_layer, "Distance");
   layer_add_child(window_layer, text_layer_get_layer(distance_text_layer));
 
   timer_text_layer = text_layer_create(GRect(5, 110, bounds.size.w - 20, 100));
@@ -351,16 +352,15 @@ enum
   AKEY_NUMBER, AKEY_NAME, AKEY_ADDRESS,
 };
 
+char d_string [8];
 static void
 in_received_handler(DictionaryIterator *iter, void *context)
 {
-  //vibes_short_pulse();
-
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Received");
   // Check for fields you expect to receive
   Tuple *name_tuple = dict_find(iter, AKEY_NAME);
   Tuple *add_tuple = dict_find(iter, AKEY_ADDRESS);
-
+  Tuple *dist_tuple = dict_find(iter, AKEY_NUMBER);
   if (name_tuple)
     {
       const char* name = name_tuple->value->cstring;
@@ -373,6 +373,24 @@ in_received_handler(DictionaryIterator *iter, void *context)
     {
       const char* add = add_tuple->value->cstring;
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Add:%s", add);
+    }
+    
+    if(dist_tuple)
+    {
+      int dist = (int)dist_tuple->value->int32;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Dist:%d", dist);
+    
+    
+    snprintf(d_string, 8, "%d km", dist);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, d_string);
+    
+    text_layer_set_text(distance_text_layer, d_string);
+    layer_mark_dirty(text_layer_get_layer(distance_text_layer));
+    if(dist == -2)
+    {  
+      vibes_short_pulse();
+    }
+    
     }
 }
 
