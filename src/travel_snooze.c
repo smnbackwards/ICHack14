@@ -276,6 +276,7 @@ action_layer_update_callback(Layer *layer, GContext* ctx)
       NULL);
 }
 
+static TextLayer *title_text_layer;
 static void
 snooze_window_load(Window* window)
 {
@@ -300,6 +301,15 @@ snooze_window_load(Window* window)
    BUTTON_ID_SELECT, icon_1);
    /*action_bar_layer_set_icon(snooze_action_layer,
    BUTTON_ID_DOWN, icon_2);*/
+
+  // Get the bounds of the window for sizing the text layer
+    GRect bounds = layer_get_bounds(window_layer);
+
+    // Create and Add to layer hierarchy:
+    title_text_layer = text_layer_create(GRect(5, 5, bounds.size.w, 30));
+    text_layer_set_text(title_text_layer, "w00t!");
+    layer_add_child(window_layer, text_layer_get_layer(title_text_layer));
+  
 }
 
 /* AppMessage API */
@@ -330,23 +340,28 @@ in_dropped_handler(AppMessageResult reason, void *context)
 
 enum
 {
-  AKEY_NUMBER, AKEY_TEXT,
+  AKEY_NUMBER, AKEY_NAME, AKEY_ADDRESS,
 };
 
 static void
 in_received_handler(DictionaryIterator *iter, void *context)
 {
   vibes_short_pulse();
-  return;
-
+    
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved");
   // Check for fields you expect to receive
-  Tuple *text_tuple = dict_find(iter, AKEY_TEXT);
+  Tuple *name_tuple = dict_find(iter, AKEY_NAME);
+  Tuple *add_tuple = dict_find(iter,AKEY_ADDRESS);
+  if(name_tuple)
+  {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Name:%s", name_tuple->value->cstring);
+  }
+  
+    if(add_tuple)
+  {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Add:%s", add_tuple->value->cstring);
+  }
 
-  // Act on the found fields received
-  if (text_tuple)
-    {
-      vibes_short_pulse();
-    }
 }
 
 void
@@ -373,14 +388,16 @@ init()
 
   window_stack_push(bookmark_menu_window, true);
 
-  app_message_register_inbox_received(in_received_handler);
-  app_message_register_inbox_dropped(in_dropped_handler);
-  app_message_register_outbox_sent(out_sent_handler);
-  app_message_register_outbox_failed(out_failed_handler);
+
 
   const uint32_t inbound_size = 64;
   const uint32_t outbound_size = 64;
   app_message_open(inbound_size, outbound_size);
+  
+  app_message_register_inbox_received(in_received_handler);
+  app_message_register_inbox_dropped(in_dropped_handler);
+  app_message_register_outbox_sent(out_sent_handler);
+  app_message_register_outbox_failed(out_failed_handler);
 }
 
 void
@@ -399,3 +416,4 @@ main(void)
   app_event_loop();
   de_init();
 }
+
