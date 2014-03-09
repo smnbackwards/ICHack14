@@ -254,12 +254,15 @@ recent_menu_window_unload(Window* window)
  */
 
 static void
+snooze_window_unload(Window* window);
+
+static void
 action_layer_bookmark_cancel_handler(ClickRecognizerRef recognizer,
     void* context)
 {
-  //Window* window = (Window *) context;
-
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Cancel");
+
+  snooze_window_unload(snooze_window);
 }
 
 static void
