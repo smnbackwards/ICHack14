@@ -36,7 +36,6 @@ public class RouteFragment extends Fragment implements LocationListener {
 	
 	private final static UUID PEBBLE_APP_UUID = UUID
 			.fromString("09f1203a-3f08-498d-93a4-4003cba6ce05");
-	private int AckID = 0;
 
 	private TextView latituteField;
 	private TextView longitudeField;
@@ -61,6 +60,19 @@ public class RouteFragment extends Fragment implements LocationListener {
 		View rootView = inflater.inflate(R.layout.fragment_route,
 				container, false);
 		
+        // Get a handle to the Map Fragment
+        //GoogleMap map = ((MapFragment) getFragmentManager()
+       //         .findFragmentById(R.id.map)).getMap();
+		
+		// Get the location manager
+		locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+		// Define the criteria how to select the locatioin provider -> use
+		// default
+		Criteria criteria = new Criteria();
+		provider = locationManager.getProviders(criteria, true).get(0);
+		Log.d("---", provider.toString());
+		location = locationManager.getLastKnownLocation(provider);
+		
 		FileIO fileIO = new AndroidFileIO(getActivity());
 		locations = new Locations(fileIO);
 
@@ -82,14 +94,6 @@ public class RouteFragment extends Fragment implements LocationListener {
 		latituteDestField = (TextView) rootView.findViewById(R.id.lblDestLatitude);
 		longitudeDestField = (TextView) rootView.findViewById(R.id.lblDestLongitude);
 
-		// Get the location manager
-		locationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
-		// Define the criteria how to select the locatioin provider -> use
-		// default
-		Criteria criteria = new Criteria();
-		provider = locationManager.getBestProvider(criteria, false);
-		location = locationManager.getLastKnownLocation(provider);
-
 		// Initialize the location fields
 		if (location != null) {
 			System.out.println("Provider " + provider + " has been selected.");
@@ -105,7 +109,6 @@ public class RouteFragment extends Fragment implements LocationListener {
 
 		btnGo.setOnClickListener(new View.OnClickListener() {
 
-			@SuppressWarnings("unused")
 			@Override
 			public void onClick(View v) {
 
@@ -118,17 +121,20 @@ public class RouteFragment extends Fragment implements LocationListener {
 					return;
 				}
 
-				RouteFragment.this.setupLocation(postCode);
+				int dist = RouteFragment.this.setupLocation(postCode);
+				Log.d("Distance button click", ""+dist);
 			}
 		});
+		
+		
 		
 		return rootView;
 	}
 
 	@Override
 	public void onLocationChanged(Location location) {
-		int lat = (int) (location.getLatitude());
-		int lng = (int) (location.getLongitude());
+		double lat = location.getLatitude();
+		double lng = location.getLongitude();
 		latituteField.setText(String.valueOf(lat));
 		longitudeField.setText(String.valueOf(lng));
 	}
@@ -177,16 +183,30 @@ public class RouteFragment extends Fragment implements LocationListener {
 						Log.i("Pebble state", "Pebble disconnected!");
 					}
 				});
-
+		
+		
 		PebbleKit.registerReceivedAckHandler(getActivity(),
 				new PebbleAckReceiver(PEBBLE_APP_UUID) {
 					@Override
 					public void receiveAck(Context context, int transactionId) {
 						Log.i("",
 								"Received ack for transaction " + transactionId);
+						
+						PebbleDictionary pebbleDic = new PebbleDictionary();
+						
+						if(i > 15)
+							return;
+						
+							pebbleDic.addString(i%2 + 1, pebbelData[i]);
+							PebbleKit.sendDataToPebble(getActivity(),
+									PEBBLE_APP_UUID, pebbleDic);
+							i++;
+							
+							
 					}
 				});
 
+		
 		PebbleKit.registerReceivedNackHandler(getActivity(),
 				new PebbleNackReceiver(PEBBLE_APP_UUID) {
 					@Override
@@ -210,6 +230,8 @@ public class RouteFragment extends Fragment implements LocationListener {
 				});
 	}
 
+	public int i = 1;
+	
 	protected void processDataFromPebble(PebbleDictionary data) {
 		
 		Log.i("DATA FROM PEBBLE", "Received value=" + data.getInteger(1)
@@ -236,24 +258,34 @@ public class RouteFragment extends Fragment implements LocationListener {
 
 		PebbleDictionary pebbleDic = new PebbleDictionary();
 
+		pebbleDic.addString(1, pebbelData[0]);
+		PebbleKit.sendDataToPebble(getActivity(),
+				PEBBLE_APP_UUID, pebbleDic);
+		
+		i = 1;
+/*		
 		for (int i = 0; i < pebbelData.length; i++) {
-			pebbleDic.addString(i, pebbelData[i]);
+			pebbleDic.addString(1, pebbelData[i]);
+			PebbleKit.sendDataToPebble(getActivity(),
+					PEBBLE_APP_UUID, pebbleDic);
+			AckID++;
 		}
 
 		PebbleKit.sendDataToPebbleWithTransactionId(getActivity(),
 				PEBBLE_APP_UUID, pebbleDic, AckID);
 		AckID++;
+		*/
 	}
 	
 	private void pebbleSendInt(int value) {
 
 		PebbleDictionary pebbleDic = new PebbleDictionary();
 
-		pebbleDic.addUint32(1, value);
+		pebbleDic.addInt32(0, value);
 		
-		PebbleKit.sendDataToPebbleWithTransactionId(getActivity(),
-				PEBBLE_APP_UUID, pebbleDic, AckID);
-		AckID++;
+		PebbleKit.sendDataToPebble(getActivity(),
+				PEBBLE_APP_UUID, pebbleDic);
+
 	}
 
 	private int setupLocation(String addressText) {
@@ -277,7 +309,7 @@ public class RouteFragment extends Fragment implements LocationListener {
 
 			double lat = address.getLatitude();
 			double lon = address.getLongitude();
-
+			
 			latituteDestField.setText("" + lat);
 			longitudeDestField.setText("" + lon);
 
@@ -287,17 +319,21 @@ public class RouteFragment extends Fragment implements LocationListener {
 					getActivity(), 0, pebbleIntent, 0);
 
 			locationManager.addProximityAlert(lat, lon, 200, -1, pendingIntent);
-
+			
 			Toast.makeText(getActivity(),
 					"Done! Pebble will wake you near your destination!",
 					Toast.LENGTH_LONG).show();
 
-			//Location toLocation = new Location("");
+			Location toLocation = new Location("MyPosition");
 			
-			//toLocation.setLatitude(lat);
-			//toLocation.setLongitude(lon);
+			toLocation.setLatitude(lat);
+			toLocation.setLongitude(lon);
 			
-			return (int)1;//location.distanceTo(toLocation);
+			float dist = location.distanceTo(toLocation);
+			
+			Log.d("DISTANCE",""+dist/1000);
+			
+			return (int)(dist/1000);
 			
 		} catch (IOException e) {
 			Toast.makeText(
@@ -308,4 +344,5 @@ public class RouteFragment extends Fragment implements LocationListener {
 		}
 		return -1;
 	}
+	
 }
