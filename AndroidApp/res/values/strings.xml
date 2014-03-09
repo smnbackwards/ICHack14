@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ICHack2014</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_route">Route</string>
+    <string name="title_section1">New Journey</string>
+    <string name="title_section2">Bookmarks</string>
+    <string name="title_section3">Recent Journeys</string>
+
+</resources>
