@@ -85,7 +85,13 @@ static void handle_tick(struct tm* tick_time, TimeUnits units_changed)
 {
   if(measuring)
     {
-
+      text_layer_set_text(timer_text_layer, clock_is_24h_style() ? "Mode:\n24" : "Mode:\n12");
+      layer_mark_dirty(text_layer_get_layer(timer_text_layer));
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Tick!");
+    }
+  else
+    {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Not measured!");
     }
 }
 
@@ -189,7 +195,6 @@ static void
 recent_menu_window_load(Window* window)
 {
   int num_items = 0;
-  measuring = true;
 
   recent_menu_items[num_items++] = (SimpleMenuItem
         )
@@ -232,7 +237,6 @@ recent_menu_window_load(Window* window)
 static void
 recent_menu_window_unload(Window* window)
 {
-  measuring = false;
   simple_menu_layer_destroy(recent_menu_layer);
 }
 
@@ -260,46 +264,32 @@ action_layer_click_config_provider(void *context)
       (ClickHandler) action_layer_bookmark_cancel_handler);
 }
 
-
-static void
-action_layer_update_callback(Layer *layer, GContext* ctx)
-{
-  /*graphics_context_set_text_color(ctx, GColorBlack);
-
-  GRect bounds = layer_get_frame(layer);
-
-  graphics_draw_text(ctx, "180 Queens Gate, SW7 2BB, London UK",
-      fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD),
-      GRect(5, 5, bounds.size.w - 22, 72), GTextOverflowModeWordWrap,
-      GTextAlignmentCenter,
-      NULL);
-
-        graphics_draw_text(ctx, "100 km",
-      fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK),
-      GRect(5, 75, bounds.size.w - 22, 50), GTextOverflowModeWordWrap,
-      GTextAlignmentCenter,
-      NULL);
-
-  graphics_draw_text(ctx, "1:20",
-      fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK),
-      GRect(5, 110, bounds.size.w - 22, 100), GTextOverflowModeWordWrap,
-      GTextAlignmentCenter,
-      NULL);*/
-}
-
 static void
 snooze_window_load(Window* window)
 {
   Layer* window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
 
-  address_text_layer = text_layer_create(GRect(0, 0, bounds.size.w - 20, bounds.size.h));
+  address_text_layer = text_layer_create(GRect(5, 5, bounds.size.w - 20, 72));
   text_layer_set_text_alignment(address_text_layer, GTextAlignmentCenter);
-  text_layer_set_font(address_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
+  text_layer_set_font(address_text_layer,
+      fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   text_layer_set_text(address_text_layer, "Location");
   layer_add_child(window_layer, text_layer_get_layer(address_text_layer));
 
-  //layer_set_update_proc(text_layer_get_layer(address_text_layer), action_layer_update_callback);
+  distance_text_layer = text_layer_create(GRect(5, 50, bounds.size.w - 20, 50));
+  text_layer_set_text_alignment(distance_text_layer, GTextAlignmentCenter);
+  text_layer_set_font(distance_text_layer,
+      fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
+  text_layer_set_text(distance_text_layer, "Distance");
+  layer_add_child(window_layer, text_layer_get_layer(distance_text_layer));
+
+  timer_text_layer = text_layer_create(GRect(5, 110, bounds.size.w - 20, 100));
+  text_layer_set_text_alignment(timer_text_layer, GTextAlignmentCenter);
+  text_layer_set_font(timer_text_layer,
+      fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+  text_layer_set_text(timer_text_layer, "Timer");
+  layer_add_child(window_layer, text_layer_get_layer(timer_text_layer));
 
   snooze_action_layer = action_bar_layer_create();
   action_bar_layer_add_to_window(snooze_action_layer, window);
@@ -311,11 +301,14 @@ snooze_window_load(Window* window)
        gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MENU_ICON_1));
 
    layer_add_child(window_layer, action_bar_layer_get_layer(snooze_action_layer));
+
+   measuring = true;
 }
 
 static void
 snooze_window_unload(Window* window)
 {
+  measuring = false;
   action_bar_layer_destroy(snooze_action_layer);
   text_layer_destroy(address_text_layer);
 }
