@@ -75,6 +75,8 @@ static TextLayer* distance_text_layer;
 static TextLayer* timer_text_layer;
 static bool reset = false;
 static struct tm start_time;
+static char loc_text [128] = "...";
+char dist_text [8] = " {.}";
 
 /*
  *
@@ -282,13 +284,14 @@ snooze_window_load(Window* window)
   text_layer_set_text_alignment(address_text_layer, GTextAlignmentCenter);
   text_layer_set_font(address_text_layer,
       fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+  text_layer_set_text(address_text_layer, loc_text);
   layer_add_child(window_layer, text_layer_get_layer(address_text_layer));
 
   distance_text_layer = text_layer_create(GRect(5, 50, bounds.size.w - 20, 50));
   text_layer_set_text_alignment(distance_text_layer, GTextAlignmentCenter);
   text_layer_set_font(distance_text_layer,
       fonts_get_system_font(FONT_KEY_GOTHIC_28));
-  text_layer_set_text(distance_text_layer, "Distance");
+  text_layer_set_text(distance_text_layer, dist_text);
   layer_add_child(window_layer, text_layer_get_layer(distance_text_layer));
 
   timer_text_layer = text_layer_create(GRect(5, 110, bounds.size.w - 20, 100));
@@ -355,7 +358,7 @@ enum
   AKEY_NUMBER, AKEY_NAME, AKEY_ADDRESS,
 };
 
-char d_string [8];
+
 static void
 in_received_handler(DictionaryIterator *iter, void *context)
 {
@@ -384,10 +387,10 @@ in_received_handler(DictionaryIterator *iter, void *context)
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Dist:%d", dist);
     
     
-    snprintf(d_string, 8, "%d km", dist);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, d_string);
+    snprintf(dist_text, 8, "%d km", dist);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, dist_text);
     
-    text_layer_set_text(distance_text_layer, d_string);
+    text_layer_set_text(distance_text_layer, dist_text);
     layer_mark_dirty(text_layer_get_layer(distance_text_layer));
     if(dist == -2)
     {  
