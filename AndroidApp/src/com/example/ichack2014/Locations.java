@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-import android.util.Log;
-
 import com.example.ichack2014.fileio.FileIO;
 
 public class Locations {
@@ -30,6 +28,15 @@ public class Locations {
         	data[i] = "Name " + i;
         	data[i+1] = "Address " + i;
         }
+        
+        data[0] = "South Kensington";
+        data[1] = "SW72BB";
+        
+        data[2] = "Welsh Crib";
+        data[3] = "CF320EU";
+        
+        data[4] = "Oskars palace of love";
+        data[5] = "SW73BG";
         
         try {
             in = new BufferedReader(new InputStreamReader(fileIO.readFile(file)));

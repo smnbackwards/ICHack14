@@ -29,10 +29,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="com.example.ichack2014.MainActivity"
-            android:label="@string/title_activity_route" >
-        </activity>
+        
     </application>
 
 </manifest>
