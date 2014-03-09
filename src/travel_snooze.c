@@ -1,3 +1,10 @@
+/*
+ * travel_snooze.c
+ *
+ *  Created on: 8 Mar 2014
+ *      Author: oskar (and maybe Nick)
+ */
+
 #include "pebble.h"
 
 /*
@@ -22,9 +29,6 @@
 
 /* Number of items in recent places section of recent places menu. */
 #define NUM_RECENT_MENU_RECENT_ELEMS 5
-
-static char *selected_location = "Home";
-
 
 /*
  *
@@ -66,6 +70,24 @@ static SimpleMenuItem recent_menu_items[NUM_RECENT_MENU_RECENT_ELEMS];
  */
 static Window* snooze_window;
 static ActionBarLayer* snooze_action_layer;
+static TextLayer* address_text_layer;
+static TextLayer* distance_text_layer;
+static TextLayer* timer_text_layer;
+static bool measuring = false;
+
+/*
+ *
+ *      TICK HANDLER
+ *
+ */
+
+static void handle_tick(struct tm* tick_time, TimeUnits units_changed)
+{
+  if(measuring)
+    {
+
+    }
+}
 
 /*
  *
@@ -77,20 +99,14 @@ static ActionBarLayer* snooze_action_layer;
 static void
 bookmark_menu_select_bookmark_callback(int index, void* context)
 {
-  const char * a = bookmark_menu_bookmark_items[index].title;
-  strncpy(selected_location, a, strlen(a));
-
-  window_stack_push(snooze_window, true);
-
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
 
-  Tuplet value = TupletCString(1, "Stephen the Banana King");
+  Tuplet value = TupletInteger(1, 1);
   dict_write_tuplet(iter, &value);
   app_message_outbox_send();
 
-  bookmark_menu_bookmark_items[index].subtitle = "Hello there.";
-  layer_mark_dirty(simple_menu_layer_get_layer(bookmark_menu_layer));
+  window_stack_push(snooze_window, true);
 }
 
 static void
@@ -173,6 +189,7 @@ static void
 recent_menu_window_load(Window* window)
 {
   int num_items = 0;
+  measuring = true;
 
   recent_menu_items[num_items++] = (SimpleMenuItem
         )
@@ -215,6 +232,7 @@ recent_menu_window_load(Window* window)
 static void
 recent_menu_window_unload(Window* window)
 {
+  measuring = false;
   simple_menu_layer_destroy(recent_menu_layer);
 }
 
@@ -227,33 +245,26 @@ recent_menu_window_unload(Window* window)
  */
 
 static void
-action_layer_bookmark_click_handler(ClickRecognizerRef recognizer,
+action_layer_bookmark_cancel_handler(ClickRecognizerRef recognizer,
     void* context)
 {
-  Window* window = (Window *) context;
-}
+  //Window* window = (Window *) context;
 
-static void
-action_layer_cancel_click_handler(ClickRecognizerRef recognizer, void* context)
-{
-  Window* window = (Window *) context;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Cancel");
 }
 
 static void
 action_layer_click_config_provider(void *context)
 {
-  window_single_click_subscribe(BUTTON_ID_DOWN,
-      (ClickHandler) action_layer_bookmark_click_handler);
-
-  window_single_click_subscribe(BUTTON_ID_UP,
-      (ClickHandler) action_layer_cancel_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT,
+      (ClickHandler) action_layer_bookmark_cancel_handler);
 }
 
 
 static void
 action_layer_update_callback(Layer *layer, GContext* ctx)
 {
-  graphics_context_set_text_color(ctx, GColorBlack);
+  /*graphics_context_set_text_color(ctx, GColorBlack);
 
   GRect bounds = layer_get_frame(layer);
 
@@ -262,7 +273,7 @@ action_layer_update_callback(Layer *layer, GContext* ctx)
       GRect(5, 5, bounds.size.w - 22, 72), GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
       NULL);
-      
+
         graphics_draw_text(ctx, "100 km",
       fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK),
       GRect(5, 75, bounds.size.w - 22, 50), GTextOverflowModeWordWrap,
@@ -273,26 +284,40 @@ action_layer_update_callback(Layer *layer, GContext* ctx)
       fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK),
       GRect(5, 110, bounds.size.w - 22, 100), GTextOverflowModeWordWrap,
       GTextAlignmentCenter,
-      NULL);
+      NULL);*/
 }
 
 static void
 snooze_window_load(Window* window)
 {
+  Layer* window_layer = window_get_root_layer(window);
+  GRect bounds = layer_get_frame(window_layer);
+
+  address_text_layer = text_layer_create(GRect(0, 0, bounds.size.w - 20, bounds.size.h));
+  text_layer_set_text_alignment(address_text_layer, GTextAlignmentCenter);
+  text_layer_set_font(address_text_layer, fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
+  text_layer_set_text(address_text_layer, "Location");
+  layer_add_child(window_layer, text_layer_get_layer(address_text_layer));
+
+  //layer_set_update_proc(text_layer_get_layer(address_text_layer), action_layer_update_callback);
+
   snooze_action_layer = action_bar_layer_create();
   action_bar_layer_add_to_window(snooze_action_layer, window);
 
   action_bar_layer_set_click_config_provider(snooze_action_layer,
       action_layer_click_config_provider);
 
-  Layer* window_layer = window_get_root_layer(window);
-  Layer* layer = (Layer *) snooze_action_layer;
-  layer = layer_create(layer_get_frame(window_layer));
-  layer_set_update_proc(layer, action_layer_update_callback);
-  layer_add_child(window_layer, layer);
+   action_bar_layer_set_icon(snooze_action_layer, BUTTON_ID_SELECT,
+       gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MENU_ICON_1));
 
-   action_bar_layer_set_icon(snooze_action_layer,
-   BUTTON_ID_SELECT, gbitmap_create_with_resource(RESOURCE_ID_IMAGE_MENU_ICON_1));
+   layer_add_child(window_layer, action_bar_layer_get_layer(snooze_action_layer));
+}
+
+static void
+snooze_window_unload(Window* window)
+{
+  action_bar_layer_destroy(snooze_action_layer);
+  text_layer_destroy(address_text_layer);
 }
 
 /*
@@ -322,24 +347,22 @@ in_dropped_handler(AppMessageResult reason, void *context)
   // incoming message dropped
 }
 
-enum
-{
-  AKEY_NUMBER, AKEY_TEXT,
-};
-
 static void
 in_received_handler(DictionaryIterator *iter, void *context)
 {
-  vibes_short_pulse();
-  return;
-
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Received!");
   // Check for fields you expect to receive
-  Tuple *text_tuple = dict_find(iter, AKEY_TEXT);
-
-  // Act on the found fields received
-  if (text_tuple)
+  for(int i = 0; i < 16; ++i)
     {
-      vibes_short_pulse();
+      Tuple *text_tuple = dict_find(iter, i);
+
+      if(text_tuple != NULL)
+        {
+          APP_LOG(APP_LOG_LEVEL_DEBUG, "Text: %s", text_tuple->value->cstring);
+
+          if(i % 2 == 0)
+             strncpy((char *) bookmark_menu_bookmark_items[i].title, text_tuple->value->cstring, strlen(text_tuple->value->cstring));
+        }
     }
 }
 
@@ -371,7 +394,7 @@ init()
   snooze_window = window_create();
   window_set_window_handlers(snooze_window, (WindowHandlers
         )
-          { .load = snooze_window_load });
+          { .load = snooze_window_load, .unload = snooze_window_unload });
 
   window_stack_push(bookmark_menu_window, true);
 
@@ -383,6 +406,8 @@ init()
   const uint32_t inbound_size = 64;
   const uint32_t outbound_size = 64;
   app_message_open(inbound_size, outbound_size);
+
+  tick_timer_service_subscribe(SECOND_UNIT, handle_tick);
 }
 
 void
@@ -391,13 +416,14 @@ de_init()
   window_destroy(snooze_window);
   window_destroy(recent_menu_window);
   window_destroy(bookmark_menu_window);
+
+  tick_timer_service_unsubscribe();
 }
 
 int
 main(void)
 {
-  if (snooze_window == NULL)
-    init();
+  init();
   app_event_loop();
   de_init();
 }
