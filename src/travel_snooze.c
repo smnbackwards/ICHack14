@@ -75,8 +75,6 @@ static TextLayer* distance_text_layer;
 static TextLayer* timer_text_layer;
 static bool reset = false;
 static struct tm start_time;
-static char loc_text [128] = "...";
-char dist_text [8] = " {.}";
 
 /*
  *
@@ -97,11 +95,11 @@ static void handle_tick(struct tm* tick_time, TimeUnits units_changed)
   static char* time;
   if (time != NULL)
     free(time);
-  time = malloc(20);
+  time = malloc(10);
   tick_time->tm_hour -= start_time.tm_hour;
   tick_time->tm_min -= start_time.tm_min;
   tick_time->tm_sec -= start_time.tm_sec;
-  strftime(time, 20, "%H:%M:%S", tick_time);
+  strftime(time, 10, "%H:%M:%S", tick_time);
   text_layer_set_text(timer_text_layer, time);
   layer_mark_dirty(text_layer_get_layer(timer_text_layer));
 }
@@ -201,6 +199,7 @@ recent_menu_select_callback(int index, void* context)
 static void
 recent_menu_window_load(Window* window)
 {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "recent_menu_load");
   int num_items = 0;
 
   recent_menu_items[num_items++] = (SimpleMenuItem
@@ -244,6 +243,7 @@ recent_menu_window_load(Window* window)
 static void
 recent_menu_window_unload(Window* window)
 {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "recent_menu_unload");
   simple_menu_layer_destroy(recent_menu_layer);
 }
 
@@ -255,8 +255,7 @@ recent_menu_window_unload(Window* window)
  *
  */
 
-static void
-snooze_window_unload(Window* window);
+static void snooze_window_unload(Window* window);
 
 static void
 action_layer_bookmark_cancel_handler(ClickRecognizerRef recognizer,
@@ -264,7 +263,7 @@ action_layer_bookmark_cancel_handler(ClickRecognizerRef recognizer,
 {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Cancel");
 
-  snooze_window_unload(snooze_window);
+  window_stack_pop(true);
 }
 
 static void
@@ -277,6 +276,7 @@ action_layer_click_config_provider(void *context)
 static void
 snooze_window_load(Window* window)
 {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "snooze_load");
   Layer* window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
 
@@ -284,14 +284,13 @@ snooze_window_load(Window* window)
   text_layer_set_text_alignment(address_text_layer, GTextAlignmentCenter);
   text_layer_set_font(address_text_layer,
       fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-  text_layer_set_text(address_text_layer, loc_text);
   layer_add_child(window_layer, text_layer_get_layer(address_text_layer));
 
   distance_text_layer = text_layer_create(GRect(5, 50, bounds.size.w - 20, 50));
   text_layer_set_text_alignment(distance_text_layer, GTextAlignmentCenter);
   text_layer_set_font(distance_text_layer,
       fonts_get_system_font(FONT_KEY_GOTHIC_28));
-  text_layer_set_text(distance_text_layer, dist_text);
+  text_layer_set_text(distance_text_layer, "0 km");
   layer_add_child(window_layer, text_layer_get_layer(distance_text_layer));
 
   timer_text_layer = text_layer_create(GRect(5, 110, bounds.size.w - 20, 100));
@@ -318,6 +317,7 @@ snooze_window_load(Window* window)
 static void
 snooze_window_unload(Window* window)
 {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "snooze_unload");
   action_bar_layer_destroy(snooze_action_layer);
   text_layer_destroy(address_text_layer);
   text_layer_destroy(timer_text_layer);
@@ -385,18 +385,6 @@ in_received_handler(DictionaryIterator *iter, void *context)
     {
       int dist = (int)dist_tuple->value->int32;
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Dist:%d", dist);
-    
-    
-    snprintf(dist_text, 8, "%d km", dist);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, dist_text);
-    
-    text_layer_set_text(distance_text_layer, dist_text);
-    layer_mark_dirty(text_layer_get_layer(distance_text_layer));
-    if(dist == -2)
-    {  
-      vibes_short_pulse();
-    }
-    
     }
 }
 
@@ -424,7 +412,6 @@ init()
               { .load = recent_menu_window_load, .unload =
                   recent_menu_window_unload });
 
-  /* TODO: Do the unload too. */
   snooze_window = window_create();
   window_set_window_handlers(snooze_window, (WindowHandlers
         )
@@ -432,10 +419,7 @@ init()
 
   window_stack_push(bookmark_menu_window, true);
 
-  const uint32_t inbound_size = 64;
-  const uint32_t outbound_size = 64;
-  app_message_open(inbound_size, outbound_size);
-
+  app_message_open(64,64);
   app_message_register_inbox_received(in_received_handler);
   app_message_register_inbox_dropped(in_dropped_handler);
   app_message_register_outbox_sent(out_sent_handler);
